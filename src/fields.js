@@ -1,4 +1,4 @@
-const Util = require('wood-util')();
+const { Util } = require('wood-util')();
 const fieldType = ['Number', 'String', 'Boolean', 'Array', 'Object', 'Date', 'Virtual'];
 
 class Fields {

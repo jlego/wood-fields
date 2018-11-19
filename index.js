@@ -5,9 +5,8 @@
  */
 const Fields = require('./src/fields');
 
-module.exports = (app, config = {}) => {
-  if(app){
-    app.Fields = Fields;
-  }
-  return Fields;
+module.exports = (app = {}, config = {}) => {
+  app.Fields = Fields;
+  if(app.addAppProp) app.addAppProp('Fields', app.Fields);
+  return app;
 }
