@@ -86,7 +86,7 @@ class Fields {
   }
 
   _validateError(key, field) {
-    let errObj = Util.deepCopy(WOOD.error_code.error_validation);
+    let errObj = Util.deepCopy(WOOD.config.errorCode.error_validation);
     errObj.name = field.alias;
     errObj.dataType = field.type;
     if (typeof field === 'object') {
