@@ -51,6 +51,9 @@ class Fields {
       case 'Number':
         newValue.default = defaultValue || (value.required ? NaN : 0);
         break;
+      case 'int':
+        newValue.default = defaultValue || (value.required ? NaN : 0);
+        break;
       case 'String':
         newValue.default = defaultValue || '';
         break;
@@ -65,6 +68,9 @@ class Fields {
         break;
       case 'Date':
         newValue.default = defaultValue || new Date();
+        break;
+      case 'datetime':
+        newValue.default = defaultValue || Util.moment().format('YYYY-MM-DD HH:mm:ss');
         break;
       case 'Virtual':
         newValue.default = defaultValue || '';
