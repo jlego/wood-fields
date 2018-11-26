@@ -92,7 +92,7 @@ class Fields {
   }
 
   _validateError(key, field) {
-    let errObj = Util.deepCopy(WOOD.config.errorCode.error_validation);
+    let errObj = JSON.parse(JSON.stringify({code: 3, msg: '错误格式'}));
     errObj.name = field.alias;
     errObj.dataType = field.type;
     if (typeof field === 'object') {
