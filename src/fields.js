@@ -1,4 +1,6 @@
 const { Util } = require('wood-util')();
+const mongodb = require('mongodb');
+const ObjectId = mongodb.ObjectID;
 const fieldType = ['Number', 'String', 'Boolean', 'Array', 'Object', 'Date', 'Virtual'];
 
 class Fields {
@@ -48,6 +50,9 @@ class Fields {
       Object.assign(newValue, value);
     }
     switch (newValue.type) {
+      case 'ObjectId':
+        newValue.default = defaultValue || ObjectId();
+        break;
       case 'Number':
         newValue.default = defaultValue || (value.required ? NaN : 0);
         break;
@@ -181,6 +186,7 @@ class Fields {
           for (let key in _fields) {
             let _value = data[key];
             if (_value == undefined) continue;
+            if(key === '_id') _value = ObjectId(_value);
             if (!fieldType.includes(_fields[key].type)) {
               if(Array.isArray(_value) && Array.isArray(_fields[key])){
                 let newArr = [];
