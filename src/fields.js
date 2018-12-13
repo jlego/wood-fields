@@ -1,7 +1,7 @@
 const { Util } = require('wood-util')();
 const mongodb = require('mongodb');
 const ObjectId = mongodb.ObjectID;
-const fieldType = ['Number', 'String', 'Boolean', 'Array', 'Object', 'Date', 'Virtual'];
+const fieldType = ['ObjectId', 'Number', 'String', 'Boolean', 'Array', 'Object', 'Date', 'Virtual'];
 
 class Fields {
   constructor(opts = {}){
@@ -159,6 +159,7 @@ class Fields {
     function loopData(fields, parentData) {
       if (!Util.isEmpty(fields)) {
         for (let key in fields) {
+          if(key === '_id') delete fields._id;
           let field = fields[key];
           if (typeof field == 'object') {
             if (!fieldType.includes(field.type)) {
