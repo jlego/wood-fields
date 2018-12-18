@@ -136,7 +136,7 @@ class Fields {
   }
 
   // 验证字段
-  validate() {
+  validate(data) {
     let that = this;
     function loopData(fields) {
       let hasErr = false;
@@ -151,7 +151,7 @@ class Fields {
       }
       return hasErr;
     }
-    return loopData(this.data);
+    return loopData(data || this.data);
   }
 
   // 重置数据
