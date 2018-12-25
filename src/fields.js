@@ -141,6 +141,9 @@ class Fields {
     function loopData(fields) {
       let hasErr = false;
       for (let key in fields) {
+        if(data){
+          if(!(key in data)) continue;
+        }
         let field = fields[key];
         if (!fieldType.includes(field.type)) {
           hasErr = loopData(field);
@@ -151,31 +154,27 @@ class Fields {
       }
       return hasErr;
     }
-    return loopData(data || this.data);
+    return loopData(this.data);
   }
 
   // 重置数据
   resetData(){
-    function loopData(fields, parentData) {
+    function loopData(fields) {
       if (!Util.isEmpty(fields)) {
         for (let key in fields) {
           if(key === '_id') delete fields._id;
           let field = fields[key];
           if (typeof field == 'object') {
             if (!fieldType.includes(field.type)) {
-              parentData[key] = loopData(field, Array.isArray(field) ? [] : {});
+              loopData(field);
             } else {
-              let theVal = field.default;
-              parentData[key] = theVal;
+              field.value = field.default;
             }
-          } else if (typeof field !== 'function') {
-            parentData[key] = field;
           }
         }
       }
-      return parentData;
     }
-    loopData(this.data, {});
+    loopData(this.data);
   }
 
   // 设置模型数据
@@ -214,12 +213,15 @@ class Fields {
   }
 
   // 获取模型数据
-  getData(hasVirtualField = true) {
+  getData(data) {
     function loopData(fields, parentData) {
       if (!Util.isEmpty(fields)) {
         for (let key in fields) {
+          if(data){
+            if(!(key in data)) continue;
+          }
           let field = fields[key];
-          if (!hasVirtualField && field.type === 'Virtual') continue;
+          if (field.type === 'Virtual') continue;
           if (typeof field == 'object') {
             if (!fieldType.includes(field.type)) {
               parentData[key] = loopData(field, Array.isArray(field) ? [] : {});
