@@ -1,6 +1,6 @@
 {
   "name": "wood-fields",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -21,6 +21,6 @@
   "homepage": "https://github.com/jlego/wood-fields#readme",
   "dependencies": {
     "mongodb": "^3.1.10",
-    "wood-util": "^1.0.5"
+    "wood-util": "^1.0.17"
   }
 }
