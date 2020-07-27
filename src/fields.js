@@ -1,11 +1,10 @@
 const { Util } = require('wood-util')();
 const mongodb = require('mongodb');
 const ObjectId = mongodb.ObjectID;
-const fieldType = ['ObjectId', 'Number', 'String', 'Boolean', 'Array', 'Object', 'Date', 'Virtual'];
-const reservedWords = ['fuzzyQuery'];
+const fieldType = ['ObjectId', 'Number', 'String', 'Boolean', 'Array', 'Object', 'Date', 'Datetime', 'Virtual'];
 
 class Fields {
-  constructor(opts = {}) {
+  constructor(opts = {}){
     this.fieldMap = {};
     this.data = opts;
     this._init();
@@ -15,15 +14,14 @@ class Fields {
     let that = this;
     function loopData(fields, parentKey) {
       for (let key in fields) {
-        if (reservedWords.includes(key)) throw Error(`model定义属性不能使用保留字:${key}`)
         let field = fields[key],
           alias = parentKey ? `${parentKey}.${key}` : key;
         if (field == undefined) continue;
         if (typeof field === 'object') {
           if (!fieldType.includes(field.type)) {
-            if (field instanceof Fields) {
+            if(field instanceof Fields){
               fields[key] = loopData(field.data, alias);
-            } else {
+            }else{
               loopData(fields[key], alias);
             }
           } else {
@@ -43,7 +41,7 @@ class Fields {
 
   //默认值
   _defaultValue(value) {
-    let newValue = { type: Array.isArray(value) ? 'Array' : Util.firstUpperCase(typeof value) },
+    let newValue = { type: Array.isArray(value) ? 'Array' : value },
       defaultValue = '';
     if (typeof value === 'function') {
       newValue.type = Util.firstUpperCase(value.name.toString());
@@ -56,10 +54,7 @@ class Fields {
         newValue.default = defaultValue || ObjectId();
         break;
       case 'Number':
-        newValue.default = defaultValue || (value.required ? NaN : 0);
-        break;
-      case 'int':
-        newValue.default = defaultValue || (value.required ? NaN : 0);
+        newValue.default = defaultValue !== undefined ? defaultValue : (value.required ? NaN : 0);
         break;
       case 'String':
         newValue.default = defaultValue || '';
@@ -76,7 +71,7 @@ class Fields {
       case 'Date':
         newValue.default = defaultValue || new Date();
         break;
-      case 'datetime':
+      case 'Datetime':
         newValue.default = defaultValue || Util.moment().format('YYYY-MM-DD HH:mm:ss');
         break;
       case 'Virtual':
@@ -86,8 +81,8 @@ class Fields {
     return newValue;
   }
 
-  _showError(errObj) {
-    switch (errObj.type) {
+  _showError(errObj){
+    switch(errObj.type){
       case 'required':
         errObj.msg += `, [${errObj.name}]不能为空`;
         break;
@@ -99,28 +94,27 @@ class Fields {
   }
 
   _validateError(key, field) {
-    let errObj = JSON.parse(JSON.stringify({ code: 3, msg: '错误格式' }));
+    let errObj = JSON.parse(JSON.stringify({code: 3, msg: '错误格式'}));
     errObj.name = field.alias;
     errObj.dataType = field.type;
     if (typeof field === 'object') {
       let value = field.value !== undefined ? field.value : field.default;
-      // 验证是否必须
+      // 验证是否空值
       if (field.required) {
         errObj.type = 'required';
         if (value === undefined) return this._showError(errObj);
         if (typeof value === 'number' && value !== 0 && !value) return this._showError(errObj);
         if (typeof value === 'string' && value == '') return this._showError(errObj);
         if (typeof value === 'object' && Util.isEmpty(value)) return this._showError(errObj);
-      }
-      if (value !== null && value !== undefined) {
+
         // 验证数据类型
         if (field.type && field.type !== 'Virtual') {
           errObj.type = 'type';
           if (field.type === 'Date' && !(value instanceof Date)) return this._showError(errObj);
           if (Array.isArray(value)) {
-            if (field.type !== 'Array') return this._showError(errObj);
-          } else {
-            if (typeof value !== field.type.toLowerCase() && field.type !== 'Date') return this._showError(errObj);
+            if(field.type !== 'Array') return this._showError(errObj);
+          }else{
+            if (typeof value !== field.type.toLowerCase()) return this._showError(errObj);
           }
         }
       }
@@ -129,7 +123,7 @@ class Fields {
         if (typeof field.validator === 'function') {
           let hasErr = field.validator(value);
           if (hasErr) {
-            errObj = hasErr.error ? hasErr.error : { ...errObj, msg: errObj.msg += `, ${hasErr}` };
+            errObj = hasErr.error ? hasErr.error : {...errObj, msg: errObj.msg += `, ${hasErr}` };
             return this._showError(errObj);
           }
         }
@@ -144,8 +138,8 @@ class Fields {
     function loopData(fields) {
       let hasErr = false;
       for (let key in fields) {
-        if (data) {
-          if (!(key in data)) continue;
+        if(data){
+          if(!(key in data)) continue;
         }
         let field = fields[key];
         if (!fieldType.includes(field.type)) {
@@ -161,11 +155,11 @@ class Fields {
   }
 
   // 重置数据
-  resetData() {
+  resetData(){
     function loopData(fields) {
       if (!Util.isEmpty(fields)) {
         for (let key in fields) {
-          //if(key === '_id') delete fields._id;
+          if(key === '_id') delete fields._id;
           let field = fields[key];
           if (typeof field == 'object') {
             if (!fieldType.includes(field.type)) {
@@ -182,37 +176,27 @@ class Fields {
 
   // 设置模型数据
   setData(target) {
+    this._init();
     let fields = this.data;
     if (typeof target === 'object' && !Array.isArray(target)) {
       if (!Util.isEmpty(target)) {
         function loopData(_fields, data) {
           for (let key in _fields) {
-            if (key == '_id') {
-              if (!(data[key] instanceof ObjectId)) {
-                _fields[key].value = ObjectId();
-              } else {
-                _fields[key].value = data[key];
-              }
-              continue;
-            }
-
             let _value = data[key];
-            if (_value == undefined) {
-              continue;
-            }
-
+            if (_value == undefined) continue;
+            if(key === '_id') _value = ObjectId(_value);
             if (!fieldType.includes(_fields[key].type)) {
-              if (Array.isArray(_value) && Array.isArray(_fields[key])) {
+              if(Array.isArray(_value) && Array.isArray(_fields[key])){
                 let newArr = [];
                 _value.forEach((item, index) => {
                   let tempField = Util.deepCopy(_fields[key][0]);
-                  for (let subKey in tempField) {
+                  for(let subKey in tempField){
                     tempField[subKey].alias = tempField[subKey].alias.replace(`${key}.0`, `${key}.${index}`);
                   }
                   newArr.push(loopData(tempField, item));
                 });
                 _fields[key] = newArr;
-              } else {
+              }else{
                 loopData(_fields[key], _value);
               }
             } else {
@@ -228,23 +212,19 @@ class Fields {
 
   // 获取模型数据
   getData(data) {
-    function loopData(fields, parentData, isroot) {
+    function loopData(fields, parentData) {
       if (!Util.isEmpty(fields)) {
         for (let key in fields) {
-          let field = fields[key];
-          if (data && !(key in data) && isroot) {
-            if (field.onUpdate && field.type === 'Date') parentData[key] = new Date();
-            continue;
+          if(data){
+            if(!(key in data)) continue;
           }
+          let field = fields[key];
           if (field.type === 'Virtual') continue;
           if (typeof field == 'object') {
             if (!fieldType.includes(field.type)) {
               parentData[key] = loopData(field, Array.isArray(field) ? [] : {});
             } else {
               let theVal = field.value || field.default;
-              if (field.type === 'Number') theVal = field.value !== 0 && !field.value ? field.default : field.value;
-              if (field.type === 'ObjectId') theVal = ObjectId();
-              if ((field.onCreate || field.onUpdate) && field.type === 'Date') theVal = new Date();
               parentData[key] = theVal;
             }
           } else if (typeof field !== 'function') {
@@ -254,7 +234,7 @@ class Fields {
       }
       return parentData;
     }
-    return loopData(this.data, {}, true);
+    return loopData(this.data, {});
   }
 }
 
